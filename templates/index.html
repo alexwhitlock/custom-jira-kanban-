@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Alex's Custom Jira Kanban Board</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+        .board {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            min-width: 0; /* <-- Required */
+        }
+        .column {
+            flex: 1;
+            min-width: 0; /* <-- Required to prevent overflow */
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 10px;
+            background-color: #f4f4f4;
+        }
+        .column h3 {
+            margin-top: 0;
+        }
+        .card {
+            display: flex;
+            justify-content: space-between;  /* Ensure space between content and avatar */
+            align-items: center;  /* Align items at the start */
+            height: auto;  /* Allow the card to grow with content */
+            padding: 4px 10px;  /* Vertical and horizontal padding */
+            margin-bottom: 4px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            min-width: 0;  /* Needed so flex children can shrink */
+        }
+        .card-content {
+            flex-grow: 1;
+            min-width: 0;
+            max-width: 100%;
+            white-space: normal;  /* Allow the content to wrap onto new lines */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 10px;  /* Provide some space from avatar */
+        }
+        .card-content:hover {
+            text-decoration: underline;
+        }   
+        .card-meta {
+            display: flex;
+            align-items: center;  /* Align time and avatar horizontally */
+            justify-content: flex-start;  /* Ensure both are on the left */
+            gap: 10px;  /* Space between time and avatar */
+            flex-shrink: 0;  /* Ensure it doesn't shrink */
+        }
+        .card-time {
+            font-size: 12px;  /* Smaller font for time */
+            color: #888;
+            white-space: nowrap;
+        }
+        .card-avatar {
+                width: 26px;
+                height: 26px;
+                border-radius: 50%;
+                font-size: 12px;
+                font-weight: bold;
+                line-height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                flex-shrink: 0;
+            }
+        .filter-popup {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            display: none;
+            z-index: 1000;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .filter-popup label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        .filter-popup select {
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="filterButton" onclick="openFilter()">Filters</button>
+    <label>
+        Sort by:
+        <select id="sortMode" onchange="applyFilters()">
+          <option value="updated">Last Updated</option>
+          <option value="assignee">Assignee</option>
+          <option value="targetEnd">Target End</option> 
+        </select>
+    </label>
+    <div class="filter-popup" id="filterPopup">
+        <label>
+            Project:
+            <select id="projectFilter" onchange="loadEpicsAssigneesTeams()">
+                <option value="">-- Select --</option>
+            </select>
+        </label>
+        <label>
+            Epic:
+            <select id="epicFilter">
+                <option value="">-- Select --</option>
+            </select>
+        </label>
+        <label>
+            Team:
+            <select id="teamFilter">
+                <option value="">-- Select --</option>
+            </select>
+        </label>
+        <label>
+            Assignee:
+            <select id="assigneeFilter">
+                <option value="">-- Select --</option>
+            </select>
+        </label>
+        <button onclick="applyFilters()">Apply</button>
+    </div>
+
+    <div class="board">
+        <div class="column" id="todo">
+            <h3>To Do</h3>
+        </div>
+        <div class="column" id="inprogress">
+            <h3>In Progress</h3>
+        </div>
+        <div class="column" id="inreview">
+            <h3>In Review</h3>
+        </div>
+        <div class="column" id="blocked">
+            <h3>Blocked</h3>
+        </div>
+
+<script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
