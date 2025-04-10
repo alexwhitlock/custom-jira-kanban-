@@ -108,6 +108,11 @@
           <option value="targetEnd">Target End</option> 
         </select>
     </label>
+    <label>
+        Summary Filter:
+        <input type="text" id="textFilter" onkeydown="checkEnter(event)" onblur="applyFilters()" />
+    </label>
+    <button id="clearTextFilter" onclick="clearTextFilter()">Clear</button>
     <div class="filter-popup" id="filterPopup">
         <label>
             Project:

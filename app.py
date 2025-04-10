@@ -37,7 +37,7 @@ def get_issues():
     jql_parts.append('issuetype != Epic')
 
     jql = ' AND '.join(jql_parts) if jql_parts else 'ORDER BY updated DESC'
-    print("🔍 JQL being used:", jql)
+    #print("🔍 JQL being used:", jql)
 
     url = f"{JIRA_URL}/rest/api/2/search"
     params = {
@@ -48,7 +48,7 @@ def get_issues():
 
     response = requests.get(url, headers=get_jira_headers(), params=params)
     
-    print(response.json())
+    #print(response.json())
     
     return jsonify(response.json())
 
@@ -127,4 +127,4 @@ if __name__ == '__main__':
     # Run the browser opener in a separate thread
     threading.Timer(1, open_browser).start()
 
-    app.run(debug=True,use_reloader=False)
+    app.run(debug=True)

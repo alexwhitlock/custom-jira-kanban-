@@ -99,14 +99,32 @@ function loadEpicsAssigneesTeams(callback = null) {
 
 
 
-
+function clearTextFilter() {
+    // Clear the text filter input
+    document.getElementById("textFilter").value = "";
+    
+    // Apply the filter again after clearing the text field (to update the results)
+    applyFilters();
+}
 
 // When filters are applied, fetch issues and render the board
 function applyFilters() {
-    const project = document.getElementById("projectFilter").value;
-    const epic = document.getElementById("epicFilter").value;
-    const assignee = document.getElementById("assigneeFilter").value;
-    const team = document.getElementById("teamFilter").value;
+    const projectFilter = document.getElementById("projectFilter");
+    const epicFilter = document.getElementById("epicFilter");
+    const assigneeFilter = document.getElementById("assigneeFilter");
+    const teamFilter = document.getElementById("teamFilter");
+    const textFilter = document.getElementById("textFilter").value.toLowerCase();  // Get text filter value
+
+    // Check if any of the filter elements are missing
+    if (!projectFilter || !epicFilter || !assigneeFilter || !teamFilter || textFilter === undefined) {
+        console.error("One or more filter elements are missing from the DOM.");
+        return;
+    }
+
+    const project = projectFilter.value;
+    const epic = epicFilter.value;
+    const assignee = assigneeFilter.value;
+    const team = teamFilter.value;
 
     const params = new URLSearchParams();
     if (project) params.append("project", project);
@@ -116,17 +134,51 @@ function applyFilters() {
     const assigneeUsername = assigneeNameToUsername?.[assignee] || assignee;
     if (assigneeUsername) params.append("assignee", assigneeUsername);
 
-
     if (team) params.append("team", team);
+    if (textFilter) params.append("text", textFilter);  // Append text filter value to params
 
+    // Fetch the issues with the applied filters
     fetch(`/api/issues?${params.toString()}`)
-        .then(res => res.json())
-        .then(data => renderBoard(data.issues))
-        .catch(err => console.error("Failed to load issues:", err));
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`Failed to load issues. Status: ${res.status}`);
+            }
+            return res.json();  // Return the JSON data
+        })
+        .then(data => {
+            // Filter the issues based on the content filter (summary of issues)
+            const filteredIssues = data.issues.filter(issue => {
+                // If no text filter is applied, return all issues
+                if (!textFilter) return true;
 
-    // ✅ Close the popup
+                // Otherwise, filter issues based on summary content
+                return issue.fields.summary.toLowerCase().includes(textFilter);
+            });
+
+            // Call the renderBoard function with the filtered issues
+            renderBoard(filteredIssues);
+        })
+        .catch(err => {
+            console.error("Failed to load issues:", err);
+            // Graceful failure: Show a user-friendly error message on the UI
+            displayErrorMessage("Unable to connect to JIRA. Please check your internet connection or VPN.");
+        });
+
+    // Close the filter popup after applying filters
     document.getElementById("filterPopup").style.display = "none";
 }
+
+
+
+
+
+// This function checks if the Enter key is pressed and calls applyFilters()
+function checkEnter(event) {
+    if (event.key === 'Enter') {
+        applyFilters(); // Apply filters when Enter is pressed
+    }
+}
+
 
 
 function getInitials(name) {
@@ -172,8 +224,8 @@ function renderBoard(issues) {
             return aName.localeCompare(bName);
     
         } else if (sortMode === 'targetEnd') {
-            const aDateRaw = a.fields.customfield_XXXXX;
-            const bDateRaw = b.fields.customfield_XXXXX;
+            const aDateRaw = a.fields.customfield_11302;
+            const bDateRaw = b.fields.customfield_11302;
     
             const aDate = aDateRaw ? new Date(aDateRaw) : new Date(8640000000000000);  // "infinity"
             const bDate = bDateRaw ? new Date(bDateRaw) : new Date(8640000000000000);
@@ -234,8 +286,8 @@ function renderBoard(issues) {
         contentDiv.appendChild(titleLine);
         contentDiv.title = contentDiv.textContent;
 
-        // Add "Target End" line ONLY for In Progress column
-        if (columnId === "In Progress") {
+        // Add "Target End" line 
+        if (columnId === "In Progress" || columnId === "To Do") {
             const targetEnd = issue.fields.customfield_11302; // Replace with actual field ID
             const targetLine = document.createElement('div');
             targetLine.className = 'card-time';
@@ -375,4 +427,21 @@ function timeSince(isoDateString) {
     return `${years} year${years !== 1 ? 's' : ''} ago`;
 }
 
-
+// Function to display a user-friendly error message
+function displayErrorMessage(message) {
+    const errorContainer = document.getElementById("errorContainer");
+    if (!errorContainer) {
+        // If the error container does not exist, create it
+        const newErrorContainer = document.createElement('div');
+        newErrorContainer.id = "errorContainer";
+        newErrorContainer.style.color = 'red';
+        newErrorContainer.style.padding = '10px';
+        newErrorContainer.style.backgroundColor = '#f8d7da';
+        newErrorContainer.style.border = '1px solid #f5c6cb';
+        newErrorContainer.style.borderRadius = '5px';
+        newErrorContainer.textContent = message;
+        document.body.prepend(newErrorContainer); // Add error message at the top of the body
+    } else {
+        errorContainer.textContent = message;
+    }
+}
